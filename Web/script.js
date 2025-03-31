@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Referencias a elementos DOM
     const registrationForm = document.getElementById('registration-form');
     const startTestBtn = document.getElementById('start-test-btn');
-    const restartBtn = document.getElementById('restart-btn');
     const saveBtn = document.getElementById('save-btn');
     const questionText = document.getElementById('question-text');
     const currentQuestionSpan = document.getElementById('current-question');
@@ -20,37 +19,49 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentQuestionIndex = 0;
     let responses = {};
     
-    // Definición de las preguntas del test
+    // Definición de las preguntas del test BFI-2-S
     const questions = [
-        // Apertura (Openness)
-        { id: 'o1', text: "Me considero una persona con mucha imaginación.", trait: "openness" },
-        { id: 'o2', text: "Me interesan temas abstractos o filosóficos.", trait: "openness" },
-        { id: 'o3', text: "Disfruto experimentando cosas nuevas.", trait: "openness" },
-        { id: 'o4', text: "Soy curioso/a acerca de diferentes temas.", trait: "openness" },
+        // Apertura (Open-Mindedness) -> o
+        // Responsabilidad (Conscientiousness) -> c
+        // Extraversión (Extraversion) -> e
+        // Amabilidad (Agreeableness) -> a
+        // Neuroticismo (Negative Emotionality) -> n
+
+        { id: 'e1', text: "Tiende a estar callado.", trait: "extraversion", reversed: true },
+        { id: 'a1', text: "Es compasivo, tiene un corazón sensible.", trait: "agreeableness", reversed: false },
+        { id: 'c1', text: "Tiende a ser desorganizado.", trait: "conscientiousness", reversed: true },
+        { id: 'n1', text: "Se preocupa mucho.", trait: "neuroticism", reversed: false },
+        { id: 'o1', text: "Está fascinado por el arte, la música o la literatura.", trait: "openness", reversed: false },
+
+        { id: 'a2', text: "A veces es grosero con los demás.", trait: "agreeableness", reversed: true },
+        { id: 'o2', text: "Tiene poco interés en ideas abstractas.", trait: "openness", reversed: true },
+        { id: 'e2', text: "Es dominante, actúa como líder.", trait: "extraversion", reversed: false },
+        { id: 'n2', text: "Tiende a sentirse deprimido, melancólico.", trait: "neuroticism", reversed: false },
+        { id: 'c2', text: "Tiene dificultad para comenzar tareas.", trait: "conscientiousness", reversed: true },
+
+        { id: 'o3', text: "Es original, se le ocurren nuevas ideas.", trait: "openness", reversed: false },
+        { id: 'e3', text: "Está lleno de energía.", trait: "extraversion", reversed: false },
+        { id: 'c3', text: "Es confiable, siempre se puede contar con usted.", trait: "conscientiousness", reversed: false },
+        { id: 'a3', text: "Asume lo mejor sobre las personas.", trait: "agreeableness", reversed: false },
+        { id: 'n3', text: "Es emocionalmente estable, no se altera fácilmente.", trait: "neuroticism", reversed: true },
         
-        // Responsabilidad (Conscientiousness)
-        { id: 'c1', text: "Soy una persona organizada.", trait: "conscientiousness" },
-        { id: 'c2', text: "Presto atención a los detalles.", trait: "conscientiousness" },
-        { id: 'c3', text: "Termino lo que empiezo.", trait: "conscientiousness" },
-        { id: 'c4', text: "Planifico antes de actuar.", trait: "conscientiousness" },
-        
-        // Extraversión (Extraversion)
-        { id: 'e1', text: "Me siento cómodo/a en situaciones sociales.", trait: "extraversion" },
-        { id: 'e2', text: "Disfruto siendo el centro de atención.", trait: "extraversion" },
-        { id: 'e3', text: "Inicio conversaciones con facilidad.", trait: "extraversion" },
-        { id: 'e4', text: "Tengo mucha energía social.", trait: "extraversion" },
-        
-        // Amabilidad (Agreeableness)
-        { id: 'a1', text: "Me preocupo por los demás.", trait: "agreeableness" },
-        { id: 'a2', text: "Soy empático/a con los sentimientos ajenos.", trait: "agreeableness" },
-        { id: 'a3', text: "Disfruto cooperando con otros.", trait: "agreeableness" },
-        { id: 'a4', text: "Confío en las personas.", trait: "agreeableness" },
-        
-        // Neuroticismo (Neuroticism)
-        { id: 'n1', text: "Me estreso con facilidad.", trait: "neuroticism" },
-        { id: 'n2', text: "Me preocupo por muchas cosas.", trait: "neuroticism" },
-        { id: 'n3', text: "Mis emociones cambian con frecuencia.", trait: "neuroticism" },
-        { id: 'n4', text: "Me siento inseguro/a con frecuencia.", trait: "neuroticism" }
+        { id: 'c4', text: "Mantiene las cosas limpias y ordenadas.", trait: "conscientiousness", reversed: false },
+        { id: 'n4', text: "Es relajado, maneja bien el estrés.", trait: "neuroticism", reversed: true },
+        { id: 'e4', text: "Es extrovertido, sociable.", trait: "extraversion", reversed: false },
+        { id: 'a4', text: "Puede ser frío e indiferente.", trait: "agreeableness", reversed: true },
+        { id: 'o4', text: "Tiene pocos intereses artísticos.", trait: "openness", reversed: true },
+
+        { id: 'e5', text: "Prefiere que otros tomen el mando.", trait: "extraversion", reversed: true },
+        { id: 'a5', text: "Es respetuoso, trata a los demás con respeto.", trait: "agreeableness", reversed: false },
+        { id: 'c5', text: "Es persistente, trabaja hasta terminar la tarea.", trait: "conscientiousness", reversed: false },
+        { id: 'o5', text: "Es complejo, un pensador profundo.", trait: "openness", reversed: false },
+        { id: 'n5', text: "Se siente seguro, cómodo consigo mismo.", trait: "neuroticism", reversed: true },
+
+        { id: 'e6', text: "Es menos activo que otras personas.", trait: "extraversion", reversed: true },
+        { id: 'a6', text: "Tiende a encontrar fallos en los demás.", trait: "agreeableness", reversed: true },          
+        { id: 'c6', text: "Puede ser algo descuidado.", trait: "conscientiousness", reversed: true },
+        { id: 'n6', text: "Es temperamental, se emociona fácilmente.", trait: "neuroticism", reversed: false },
+        { id: 'o6', text: "Tiene poca creatividad.", trait: "openness", reversed: true }
     ];
     
     // Manejar registro de usuario
@@ -59,6 +70,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const email = document.getElementById('email').value;
         const username = document.getElementById('username').value;
+        const gender = document.getElementById('gender').value;
+        const age = document.getElementById('age').value;
         
         // Validar el nombre de usuario localmente antes de enviar
         if (!username.match(/^[a-zA-Z0-9_]{3,30}$/)) {
@@ -74,7 +87,9 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({
                 email: email,
-                username: username
+                username: username,
+                gender: gender, 
+                age: age
             }),
         })
         .then(response => {
@@ -121,7 +136,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Guardar respuesta después de un pequeño retraso para el efecto visual
             setTimeout(() => {
                 const value = parseInt(this.dataset.value);
-                responses[questions[currentQuestionIndex].id] = value;
+                
+                // Guardar respuesta ajustando si la pregunta está invertida
+                if (questions[currentQuestionIndex].reversed) {
+                    responses[questions[currentQuestionIndex].id] = 6 - value; // Invertir en escala 1-5 (6-value)
+                } else {
+                    responses[questions[currentQuestionIndex].id] = value;
+                }
                 
                 // Avanzar a la siguiente pregunta
                 if (currentQuestionIndex < questions.length - 1) {
@@ -135,26 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Reiniciar test (volver a la pantalla de registro)
-    restartBtn.addEventListener('click', function() {
-        // Reiniciar formularios
-        registrationForm.reset();
-        
-        // Reiniciar variables
-        currentUserId = null;
-        currentQuestionIndex = 0;
-        responses = {};
-        
-        // Volver a la sección de registro
-        resultsSection.classList.add('hidden');
-        testSection.classList.add('hidden');
-        testIntroSection.classList.add('hidden');
-        registrationSection.classList.remove('hidden');
-        
-        // Eliminar mensajes de error/éxito previos
-        const messages = document.querySelectorAll('.error-message, .success-message');
-        messages.forEach(message => message.remove());
-    });
+    
     
     // Mostrar pregunta actual
     function showQuestion(index) {
@@ -295,15 +297,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const finishRatingsBtn = document.getElementById('finish-ratings-btn');
     const goToMoviesBtn = document.getElementById('go-to-movies-btn');
 
-    // Referencias a elementos del modal de calificación
-    const ratingModal = document.getElementById('rating-modal');
-    const movieTitle = document.getElementById('movie-title');
-    const moviePoster = document.getElementById('movie-poster');
-    const stars = document.querySelectorAll('.star');
-    const saveRatingBtn = document.getElementById('save-rating-btn');
-    const cancelRatingBtn = document.getElementById('cancel-rating-btn');
-    const closeModal = document.querySelector('.close-modal');
-    const baseUrl = "https://image.tmdb.org/t/p/original/";
+    // Referencias a elementos de la nueva sección de calificación individual
+    const singleMovieSection = document.getElementById('single-movie-section');
+    const singleMovieTitle = document.getElementById('single-movie-title');
+    const singleMoviePoster = document.getElementById('single-movie-poster');
+    const singleMovieStars = document.querySelectorAll('#single-movie-section .star');
+    const saveMovieRatingBtn = document.getElementById('save-movie-rating-btn');
+    const backToMoviesBtn = document.getElementById('back-to-movies-btn');
 
     // Referencias al modal de finalización
     const completionModal = document.getElementById('completion-modal');
@@ -315,6 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let userRatings = {};
     let ratedMoviesCount = 0;
     const minRatingsRequired = 10;
+    const baseUrl = "https://image.tmdb.org/t/p/original/";
 
     // Ir a la sección de películas
     goToMoviesBtn.addEventListener('click', function() {
@@ -371,9 +372,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="movie-title">${movie.title}</div>
                     `;
                     
-                    // Agregar evento click a la tarjeta
+                    // Agregar evento click a la tarjeta para ir a la pantalla individual
                     movieCard.addEventListener('click', () => {
-                        openRatingModal(movie);
+                        showSingleMovie(movie);
                     });
                     
                     moviesGrid.appendChild(movieCard);
@@ -384,17 +385,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Abrir modal para calificar película
-    function openRatingModal(movie) {
+    // Mostrar pantalla de película individual
+    function showSingleMovie(movie) {
         selectedMovieId = movie.movieId;
         selectedRating = userRatings[movie.movieId] || null;
         
-        // Configurar modal
-        movieTitle.textContent = movie.title;
-        moviePoster.src = baseUrl + movie.poster_path || '/placeholder.jpg';
+        // Configurar pantalla
+        singleMovieTitle.textContent = movie.title;
+        singleMoviePoster.src = baseUrl + movie.poster_path || '/placeholder.jpg';
         
         // Resetear estrellas
-        stars.forEach(star => {
+        singleMovieStars.forEach(star => {
             const rating = parseInt(star.dataset.rating);
             if (selectedRating && rating <= selectedRating) {
                 star.classList.add('active');
@@ -403,16 +404,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Mostrar modal
-        ratingModal.classList.remove('hidden');
+        // Mostrar sección individual y ocultar grid de películas
+        moviesSection.classList.add('hidden');
+        singleMovieSection.classList.remove('hidden');
     }
 
-    // Manejar eventos de calificación con estrellas
-    stars.forEach(star => {
+    // Manejar eventos de calificación con estrellas en la pantalla individual
+    singleMovieStars.forEach(star => {
         // Hover sobre estrellas
         star.addEventListener('mouseover', function() {
             const hoverRating = parseInt(this.dataset.rating);
-            stars.forEach(s => {
+            singleMovieStars.forEach(s => {
                 const rating = parseInt(s.dataset.rating);
                 if (rating <= hoverRating) {
                     s.classList.add('hover');
@@ -424,13 +426,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Salir del hover
         star.addEventListener('mouseout', function() {
-            stars.forEach(s => s.classList.remove('hover'));
+            singleMovieStars.forEach(s => s.classList.remove('hover'));
         });
         
         // Clic en una estrella
         star.addEventListener('click', function() {
             selectedRating = parseInt(this.dataset.rating);
-            stars.forEach(s => {
+            singleMovieStars.forEach(s => {
                 const rating = parseInt(s.dataset.rating);
                 if (rating <= selectedRating) {
                     s.classList.add('active');
@@ -441,10 +443,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Guardar calificación
-    saveRatingBtn.addEventListener('click', function() {
+    // Guardar calificación y volver a la lista de películas
+    saveMovieRatingBtn.addEventListener('click', function() {
         if (!selectedRating) {
-            showMessage(ratingModal.querySelector('.modal-content'), 'Por favor selecciona una calificación', 'error');
+            showMessage(singleMovieSection, 'Por favor selecciona una calificación', 'error');
             return;
         }
         
@@ -479,13 +481,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateRatingsProgress();
             }
             
-            // Cerrar modal y recargar películas
-            closeRatingModal();
-            loadMovies();
+            // Mostrar mensaje de éxito
+            showMessage(singleMovieSection, 'Calificación guardada con éxito', 'success');
+            
+            // Volver a la pantalla de películas después de un breve retraso
+            setTimeout(() => {
+                singleMovieSection.classList.add('hidden');
+                moviesSection.classList.remove('hidden');
+                // Recargar películas para actualizar la visualización
+                loadMovies();
+            }, 1000);
         })
         .catch(error => {
-            showMessage(ratingModal.querySelector('.modal-content'), error.message, 'error');
+            showMessage(singleMovieSection, error.message, 'error');
         });
+    });
+
+    // Volver a la lista de películas sin guardar
+    backToMoviesBtn.addEventListener('click', function() {
+        singleMovieSection.classList.add('hidden');
+        moviesSection.classList.remove('hidden');
     });
 
     // Actualizar barra de progreso y contador de calificaciones
@@ -502,36 +517,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Cerrar modal de calificación
-    function closeRatingModal() {
-        ratingModal.classList.add('hidden');
-        selectedMovieId = null;
-        selectedRating = null;
-    }
-
-    // Eventos para cerrar el modal
-    cancelRatingBtn.addEventListener('click', closeRatingModal);
-    closeModal.addEventListener('click', closeRatingModal);
-
     // Finalizar proceso de calificación
     finishRatingsBtn.addEventListener('click', function() {
         completionModal.classList.remove('hidden');
+        moviesSection.classList.add('hidden');
+        resultsSection.classList.add('hidden');
     });
 
     // Aceptar en el modal de finalización
     completionOkBtn.addEventListener('click', function() {
-        completionModal.classList.add('hidden');
-        // Aquí podrías redirigir a otra página o mostrar recomendaciones
-        // Por ahora, volvemos a la sección de resultados
+        completionModal.classList.remove('hidden');
         moviesSection.classList.add('hidden');
-        resultsSection.classList.remove('hidden');
+        resultsSection.classList.add('hidden');
     });
 
     // Cerrar modales al hacer clic fuera de ellos
     window.addEventListener('click', function(event) {
-        if (event.target === ratingModal) {
-            closeRatingModal();
-        }
         if (event.target === completionModal) {
             completionModal.classList.add('hidden');
         }

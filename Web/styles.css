@@ -65,6 +65,7 @@ label {
 }
 
 input[type="email"],
+input[type="number"],
 input[type="text"] {
     width: 100%;
     padding: 12px;
@@ -74,7 +75,40 @@ input[type="text"] {
     transition: border-color 0.3s;
 }
 
+/* Estilo para el campo de Género (select) */
+select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    color: #333;
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+/* Estilo cuando el campo de Género tiene el foco */
+select:focus {
+    border-color: #007bff;
+    outline: none;
+    background-color: #fff;
+}
+
+/* Estilo de las opciones dentro del select */
+select option {
+    padding: 12px;
+    font-size: 16px;
+}
+
+/* Estilo adicional para hacerlo más accesible */
+select::-ms-expand {
+    display: none;
+}
+
+
 input[type="email"]:focus,
+input[type="number"]:focus,
 input[type="text"]:focus {
     border-color: #3498db;
     outline: none;

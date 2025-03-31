@@ -2,12 +2,14 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
-from typing import List, Optional, Dict
 import mysql.connector
 from mysql.connector import Error
-import json
-from datetime import datetime
 import re
+from dotenv import load_dotenv
+import os
+
+# Cargar las variables de entorno del archivo .env
+load_dotenv()
 
 # Creamos la aplicación FastAPI
 app = FastAPI(title="Sistema de Recomendación - Big Five Personality Test")
@@ -15,7 +17,7 @@ app = FastAPI(title="Sistema de Recomendación - Big Five Personality Test")
 # Configuramos CORS para permitir peticiones desde el frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción, especifica los dominios permitidos
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +27,8 @@ app.add_middleware(
 class UserRegistration(BaseModel):
     email: EmailStr
     username: str
+    gender: str
+    age: int
 
 class PersonalityResult(BaseModel):
     userId: int
@@ -39,12 +43,12 @@ class MovieRating(BaseModel):
     movieId: int
     rating: int = Field(..., ge=1, le=5)  # Rating debe estar entre 1 y 5
 
-# Configuración de la base de datos
+# Obtener las variables de entorno para la configuración de la base de datos
 DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "KurapikaCarti",
-    "database": "recommender_system"
+    "host": os.getenv("DB_HOST"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_DATABASE")
 }
 
 # Función para conectar a la base de datos
@@ -93,8 +97,8 @@ async def register_user(user: UserRegistration):
         
         # Insertar el nuevo usuario
         cursor.execute(
-            "INSERT INTO users (email, username) VALUES (%s, %s)",
-            (user.email, user.username)
+            "INSERT INTO users (email, username, gender, age) VALUES (%s, %s, %s, %s)",
+            (user.email, user.username, user.gender, user.age)
         )
         connection.commit()
         
@@ -235,7 +239,7 @@ async def get_all_movies():
         cursor = connection.cursor(dictionary=True)
         
         # Obtener todas las películas
-        cursor.execute("SELECT movieId, title, tagline, poster_path FROM top_films")
+        cursor.execute("SELECT movieId, title, poster_path FROM top_films")
         movies = cursor.fetchall()
         
         if not movies:

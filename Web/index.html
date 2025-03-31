@@ -23,6 +23,17 @@
                     <input type="text" id="username" name="username" required>
                     <small>Entre 3 y 30 caracteres, solo letras, números y guiones bajos</small>
                 </div>
+                <div class="form-group">
+                    <label for="gender">Género:</label>
+                    <select id="gender" name="gender" required>
+                        <option value="H">Hombre</option>
+                        <option value="M">Mujer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="age">Edad:</label>
+                    <input type="number" id="age" name="age" required min="12" max="100">
+                </div>                                
                 <button type="submit" class="btn">Registrarse</button>
             </form>
         </div>
@@ -51,7 +62,7 @@
             <div class="progress-container">
                 <div class="progress-bar" id="progress-bar"></div>
             </div>
-            <p class="progress-text">Pregunta <span id="current-question">1</span> de 20</p>
+            <p class="progress-text">Pregunta <span id="current-question">1</span> de 30</p>
 
             <div id="question-container">
                 <p id="question-text" class="question-text"></p>
@@ -125,7 +136,6 @@
 
             <div class="result-actions">
                 <button id="go-to-movies-btn" class="btn btn-primary">Calificar Películas</button>
-                <button id="restart-btn" class="btn btn-primary">Reiniciar Cuestioanrio</button>
             </div>
         </div>
         
@@ -150,13 +160,12 @@
             </div>
         </div>
         
-        <!-- Modal para calificar películas -->
-        <div id="rating-modal" class="section hidden">
-            <div class="modal-content">
-                <span class="close-modal">&times;</span>
-                <h3 id="movie-title">Título de la Película</h3>
+        <!-- Sección para calificar película individual -->
+        <div id="single-movie-section" class="section hidden">
+            <div class="single-movie-container">
+                <h3 id="single-movie-title">Título de la Película</h3>
                 <div class="movie-poster-container">
-                    <img id="movie-poster" src="" alt="Póster de la película">
+                    <img id="single-movie-poster" src="" alt="Póster de la película">
                 </div>
                 <div class="rating-container">
                     <p>¿Cómo calificarías esta película?</p>
@@ -168,9 +177,9 @@
                         <span class="star" data-rating="5">★</span>
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button id="save-rating-btn" class="btn btn-primary">Guardar</button>
-                    <button id="cancel-rating-btn" class="btn btn-secondary">Cancelar</button>
+                <div class="movie-actions">
+                    <button id="save-movie-rating-btn" class="btn btn-primary">Guardar</button>
+                    <button id="back-to-movies-btn" class="btn btn-secondary">Cancelar</button>
                 </div>
             </div>
         </div>
