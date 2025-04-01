@@ -94,12 +94,15 @@ async def register_user(user: UserRegistration):
             "INSERT INTO users (email, username, gender, age) VALUES (%s, %s, %s, %s) RETURNING userid",
             (user.email, user.username, user.gender, user.age)
         )
-        user_id = cursor.fetchone()[0]
+        result = cursor.fetchone()
+        # Corregido: Acceder al resultado como diccionario en lugar de lista
+        user_id = result['userid']
         connection.commit()
         
         return {"message": "Usuario registrado con éxito", "userId": user_id}
     
     except Error as e:
+        connection.rollback()  # Rollback en caso de error
         raise HTTPException(status_code=500, detail=f"Error al registrar usuario: {str(e)}")
     
     finally:
@@ -126,7 +129,6 @@ async def save_personality(result: PersonalityResult):
         cursor = connection.cursor()
         
         # Verificar que el usuario existe
-        print(result.userId,)
         cursor.execute("SELECT userid FROM users WHERE userid = %s", (result.userId,))
         if not cursor.fetchone():
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
@@ -175,6 +177,7 @@ async def save_personality(result: PersonalityResult):
         return {"message": "Resultados de personalidad guardados con éxito"}
     
     except Error as e:
+        connection.rollback()  # Rollback en caso de error
         raise HTTPException(status_code=500, detail=f"Error al guardar resultados: {str(e)}")
     
     finally:
@@ -190,8 +193,7 @@ async def get_user(user_id: int):
         raise HTTPException(status_code=500, detail="Error conectando a la base de datos")
     
     try:
-        # Usamos RealDictCursor para obtener los resultados como diccionarios
-        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor = connection.cursor()
         
         # Obtener datos del usuario
         cursor.execute("SELECT userid, email, username FROM users WHERE userid = %s", (user_id,))
@@ -236,7 +238,7 @@ async def get_all_movies():
         raise HTTPException(status_code=500, detail="Error conectando a la base de datos")
     
     try:
-        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor = connection.cursor()
         
         # Obtener todas las películas
         cursor.execute("SELECT movieid, title, poster_path FROM top_films")
@@ -275,12 +277,14 @@ async def rate_movie(rating: MovieRating):
         
         # Verificar que el usuario existe
         cursor.execute("SELECT userid FROM users WHERE userid = %s", (rating.userId,))
-        if not cursor.fetchone():
+        result = cursor.fetchone()
+        if not result:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         
         # Verificar que la película existe
         cursor.execute("SELECT movieid FROM top_films WHERE movieid = %s", (rating.movieId,))
-        if not cursor.fetchone():
+        result = cursor.fetchone()
+        if not result:
             raise HTTPException(status_code=404, detail="Película no encontrada")
         
         # Verificar si ya existe un rating para esta película y usuario
@@ -307,6 +311,7 @@ async def rate_movie(rating: MovieRating):
         return {"message": message}
     
     except Error as e:
+        connection.rollback()  # Añadido rollback en caso de error
         raise HTTPException(status_code=500, detail=f"Error al guardar rating: {str(e)}")
     
     finally:
@@ -322,11 +327,12 @@ async def get_user_ratings(user_id: int):
         raise HTTPException(status_code=500, detail="Error conectando a la base de datos")
     
     try:
-        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor = connection.cursor()
         
         # Verificar que el usuario existe
         cursor.execute("SELECT userid FROM users WHERE userid = %s", (user_id,))
-        if not cursor.fetchone():
+        result = cursor.fetchone()
+        if not result:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         
         # Obtener todos los ratings del usuario

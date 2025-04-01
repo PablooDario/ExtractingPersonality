@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Enviar datos de registro al backend
-        fetch('http://localhost:8000/api/users', {
+        fetch('https://extractingpersonality.onrender.com/api/users', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const results = calculateScores();
         
         // Enviar resultados al backend
-        fetch('http://localhost:8000/api/personalities', {
+        fetch('https://extractingpersonality.onrender.com/api/personalities', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
         moviesGrid.innerHTML = '<div class="loading-message">Cargando películas...</div>';
         
         // Obtener los ratings existentes del usuario
-        fetch(`http://localhost:8000/api/ratings/${currentUserId}`)
+        fetch(`https://extractingpersonality.onrender.com/api/ratings/${currentUserId}`)
             .then(response => response.json())
             .then(data => {
                 // Guardar ratings existentes
@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateRatingsProgress();
                 
                 // Cargar lista de películas
-                return fetch('http://localhost:8000/api/movies');
+                return fetch('https://extractingpersonality.onrender.com/api/movies');
             })
             .then(response => response.json())
             .then(data => {
@@ -451,7 +451,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Enviar calificación al backend
-        fetch('http://localhost:8000/api/ratings', {
+        fetch('https://extractingpersonality.onrender.com/api/ratings', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
