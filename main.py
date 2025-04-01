@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
-import mysql.connector
-from mysql.connector import Error
+import psycopg2
+from psycopg2 import Error
+from psycopg2.extras import RealDictCursor
 import re
 from dotenv import load_dotenv
 import os
@@ -47,16 +48,16 @@ DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
     "user": os.getenv("DB_USER"),
     "password": os.getenv("DB_PASSWORD"),
-    "database": os.getenv("DB_DATABASE")
+    "dbname": os.getenv("DB_NAME")
 }
 
 # Función para conectar a la base de datos
 def get_db_connection():
     try:
-        connection = mysql.connector.connect(**DB_CONFIG)
+        connection = psycopg2.connect(**DB_CONFIG)
         return connection
     except Error as e:
-        print(f"Error conectando a MySQL: {e}")
+        print(f"Error conectando a PostgreSQL: {e}")
         return None
 
 # Verifica que el email y username sean válidos
@@ -85,24 +86,22 @@ async def register_user(user: UserRegistration):
         cursor = connection.cursor()
         
         # Verificar si el email ya está registrado
-        cursor.execute("SELECT userId FROM users WHERE email = %s", (user.email,))
+        cursor.execute("SELECT userid FROM users WHERE email = %s", (user.email,))
         if cursor.fetchone():
             raise HTTPException(status_code=400, detail="Este email ya está registrado")
         
         # Verificar si el nombre de usuario ya está registrado
-        cursor.execute("SELECT userId FROM users WHERE username = %s", (user.username,))
+        cursor.execute("SELECT userid FROM users WHERE username = %s", (user.username,))
         if cursor.fetchone():
             raise HTTPException(status_code=400, detail="Este nombre de usuario ya está registrado")
         
-        # Insertar el nuevo usuario
+        # Insertar el nuevo usuario y obtener el ID generado
         cursor.execute(
-            "INSERT INTO users (email, username, gender, age) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO users (email, username, gender, age) VALUES (%s, %s, %s, %s) RETURNING userid",
             (user.email, user.username, user.gender, user.age)
         )
+        user_id = cursor.fetchone()[0]
         connection.commit()
-        
-        # Obtener el ID del usuario recién creado
-        user_id = cursor.lastrowid
         
         return {"message": "Usuario registrado con éxito", "userId": user_id}
     
@@ -110,7 +109,7 @@ async def register_user(user: UserRegistration):
         raise HTTPException(status_code=500, detail=f"Error al registrar usuario: {str(e)}")
     
     finally:
-        if connection.is_connected():
+        if connection:
             cursor.close()
             connection.close()
 
@@ -133,19 +132,20 @@ async def save_personality(result: PersonalityResult):
         cursor = connection.cursor()
         
         # Verificar que el usuario existe
-        cursor.execute("SELECT userId FROM users WHERE userId = %s", (result.userId,))
+        print(result.userId,)
+        cursor.execute("SELECT userid FROM users WHERE userid = %s", (result.userId,))
         if not cursor.fetchone():
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         
         # Verificar si ya existe un registro de personalidad para este usuario
-        cursor.execute("SELECT userId FROM personalities WHERE userId = %s", (result.userId,))
+        cursor.execute("SELECT userid FROM personalities WHERE userid = %s", (result.userId,))
         if cursor.fetchone():
             # Actualizar el registro existente
             query = """
             UPDATE personalities 
             SET openness = %s, conscientiousness = %s, extraversion = %s, 
                 agreeableness = %s, neuroticism = %s
-            WHERE userId = %s
+            WHERE userid = %s
             """
             cursor.execute(
                 query, 
@@ -162,7 +162,7 @@ async def save_personality(result: PersonalityResult):
             # Insertar nuevo registro
             query = """
             INSERT INTO personalities 
-            (userId, openness, conscientiousness, extraversion, agreeableness, neuroticism)
+            (userid, openness, conscientiousness, extraversion, agreeableness, neuroticism)
             VALUES (%s, %s, %s, %s, %s, %s)
             """
             cursor.execute(
@@ -184,7 +184,7 @@ async def save_personality(result: PersonalityResult):
         raise HTTPException(status_code=500, detail=f"Error al guardar resultados: {str(e)}")
     
     finally:
-        if connection.is_connected():
+        if connection:
             cursor.close()
             connection.close()
 
@@ -196,34 +196,41 @@ async def get_user(user_id: int):
         raise HTTPException(status_code=500, detail="Error conectando a la base de datos")
     
     try:
-        cursor = connection.cursor(dictionary=True)
+        # Usamos RealDictCursor para obtener los resultados como diccionarios
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
         
         # Obtener datos del usuario
-        cursor.execute("SELECT userId, email, username FROM users WHERE userId = %s", (user_id,))
+        cursor.execute("SELECT userid, email, username FROM users WHERE userid = %s", (user_id,))
         user = cursor.fetchone()
         
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         
         # Obtener datos de personalidad si existen
-        cursor.execute("SELECT * FROM personalities WHERE userId = %s", (user_id,))
+        cursor.execute("SELECT * FROM personalities WHERE userid = %s", (user_id,))
         personality = cursor.fetchone()
         
         # Combinar los resultados
         if personality:
             # Eliminar userId duplicado
-            del personality['userId']
-            user['personality'] = personality
+            del personality['userid']
+            # Para mantener consistencia con el frontend, renombramos la clave
+            user['userId'] = user['userid']
+            del user['userid']
+            user['personality'] = dict(personality)
         else:
+            # Para mantener consistencia con el frontend, renombramos la clave
+            user['userId'] = user['userid']
+            del user['userid']
             user['personality'] = None
             
-        return user
+        return dict(user)
     
     except Error as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener datos: {str(e)}")
     
     finally:
-        if connection.is_connected():
+        if connection:
             cursor.close()
             connection.close()
 
@@ -235,22 +242,30 @@ async def get_all_movies():
         raise HTTPException(status_code=500, detail="Error conectando a la base de datos")
     
     try:
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
         
         # Obtener todas las películas
-        cursor.execute("SELECT movieId, title, poster_path FROM top_films")
+        cursor.execute("SELECT movieid, title, poster_path FROM top_films")
         movies = cursor.fetchall()
         
         if not movies:
             return {"movies": []}
             
-        return {"movies": movies}
+        # Asegurar que los nombres de campo sean consistentes con el frontend
+        processed_movies = []
+        for movie in movies:
+            processed_movie = dict(movie)
+            processed_movie['movieId'] = processed_movie['movieid']
+            del processed_movie['movieid']
+            processed_movies.append(processed_movie)
+            
+        return {"movies": processed_movies}
     
     except Error as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener películas: {str(e)}")
     
     finally:
-        if connection.is_connected():
+        if connection:
             cursor.close()
             connection.close()
 
@@ -265,31 +280,31 @@ async def rate_movie(rating: MovieRating):
         cursor = connection.cursor()
         
         # Verificar que el usuario existe
-        cursor.execute("SELECT userId FROM users WHERE userId = %s", (rating.userId,))
+        cursor.execute("SELECT userid FROM users WHERE userid = %s", (rating.userId,))
         if not cursor.fetchone():
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         
         # Verificar que la película existe
-        cursor.execute("SELECT movieId FROM top_films WHERE movieId = %s", (rating.movieId,))
+        cursor.execute("SELECT movieid FROM top_films WHERE movieid = %s", (rating.movieId,))
         if not cursor.fetchone():
             raise HTTPException(status_code=404, detail="Película no encontrada")
         
         # Verificar si ya existe un rating para esta película y usuario
         cursor.execute(
-            "SELECT userId FROM ratings WHERE userId = %s AND movieId = %s", 
+            "SELECT userid FROM ratings WHERE userid = %s AND movieid = %s", 
             (rating.userId, rating.movieId)
         )
         if cursor.fetchone():
             # Actualizar el rating existente
             cursor.execute(
-                "UPDATE ratings SET rating = %s WHERE userId = %s AND movieId = %s",
+                "UPDATE ratings SET rating = %s WHERE userid = %s AND movieid = %s",
                 (rating.rating, rating.userId, rating.movieId)
             )
             message = "Rating actualizado con éxito"
         else:
             # Insertar nuevo rating
             cursor.execute(
-                "INSERT INTO ratings (userId, movieId, rating) VALUES (%s, %s, %s)",
+                "INSERT INTO ratings (userid, movieid, rating) VALUES (%s, %s, %s)",
                 (rating.userId, rating.movieId, rating.rating)
             )
             message = "Rating guardado con éxito"
@@ -301,7 +316,7 @@ async def rate_movie(rating: MovieRating):
         raise HTTPException(status_code=500, detail=f"Error al guardar rating: {str(e)}")
     
     finally:
-        if connection.is_connected():
+        if connection:
             cursor.close()
             connection.close()
 
@@ -313,27 +328,35 @@ async def get_user_ratings(user_id: int):
         raise HTTPException(status_code=500, detail="Error conectando a la base de datos")
     
     try:
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
         
         # Verificar que el usuario existe
-        cursor.execute("SELECT userId FROM users WHERE userId = %s", (user_id,))
+        cursor.execute("SELECT userid FROM users WHERE userid = %s", (user_id,))
         if not cursor.fetchone():
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         
         # Obtener todos los ratings del usuario
         cursor.execute(
-            "SELECT r.movieId, r.rating, f.title FROM ratings r JOIN top_films f ON r.movieId = f.movieId WHERE r.userId = %s", 
+            "SELECT r.movieid, r.rating, f.title FROM ratings r JOIN top_films f ON r.movieid = f.movieid WHERE r.userid = %s", 
             (user_id,)
         )
         ratings = cursor.fetchall()
         
-        return {"ratings": ratings, "count": len(ratings)}
+        # Asegurar que los nombres de campo sean consistentes con el frontend
+        processed_ratings = []
+        for rating in ratings:
+            processed_rating = dict(rating)
+            processed_rating['movieId'] = processed_rating['movieid']
+            del processed_rating['movieid']
+            processed_ratings.append(processed_rating)
+        
+        return {"ratings": processed_ratings, "count": len(ratings)}
     
     except Error as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener ratings: {str(e)}")
     
     finally:
-        if connection.is_connected():
+        if connection:
             cursor.close()
             connection.close()
 
