@@ -43,18 +43,12 @@ class MovieRating(BaseModel):
     movieId: int
     rating: int = Field(..., ge=1, le=5)  # Rating debe estar entre 1 y 5
 
-# Obtener las variables de entorno para la configuración de la base de datos
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "dbname": os.getenv("DB_NAME")
-}
+# Obtener la URL de conexión desde las variables de entorno
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Función para conectar a la base de datos
 def get_db_connection():
     try:
-        connection = psycopg2.connect(**DB_CONFIG)
+        connection = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
         return connection
     except Error as e:
         print(f"Error conectando a PostgreSQL: {e}")
