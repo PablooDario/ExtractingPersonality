@@ -57,10 +57,10 @@ def get_db_connection():
 # Verifica que el email y username sean válidos
 def validate_user_data(user: UserRegistration):
     # Verifica que el nombre de usuario cumpla con ciertos requisitos
-    if not re.match(r'^[a-zA-Z0-9_]{3,30}$', user.username):
+    if not re.match(r'^[a-zA-Z0-9_ ]{3,30}$', user.username):
         raise HTTPException(
             status_code=400, 
-            detail="El nombre de usuario debe tener entre 3 y 30 caracteres alfanuméricos o guiones bajos"
+            detail="El nombre de usuario debe tener entre 3 y 30 caracteres alfanuméricos, guiones bajos o espacios"
         )
     
     # Email ya se valida con EmailStr de pydantic
