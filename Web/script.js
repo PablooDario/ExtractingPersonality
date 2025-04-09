@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Referencias a elementos DOM
     const registrationForm = document.getElementById('registration-form');
     const startTestBtn = document.getElementById('start-test-btn');
-    const saveBtn = document.getElementById('save-btn');
     const questionText = document.getElementById('question-text');
     const currentQuestionSpan = document.getElementById('current-question');
     const progressBar = document.getElementById('progress-bar');
@@ -21,47 +20,41 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Definición de las preguntas del test BFI-2-S
     const questions = [
-        // Apertura (Open-Mindedness) -> o
-        // Responsabilidad (Conscientiousness) -> c
-        // Extraversión (Extraversion) -> e
-        // Amabilidad (Agreeableness) -> a
-        // Neuroticismo (Negative Emotionality) -> n
+        { id: '1', text: "Compasivo/a, con un gran corazón.", trait: "agreeableness", reversed: false },
+        { id: '2', text: "Relajado/a, que gestiona bien el estrés.", trait: "neuroticism", reversed: true },
+        { id: '3', text: "Respetuoso/a, que trata a los demás con respeto.", trait: "agreeableness", reversed: false },
+        { id: '4', text: "Formal, constante.", trait: "conscientiousness", reversed: false },
+        { id: '5', text: "Que tiende a estar callado/a.", trait: "extraversion", reversed: true },
 
-        { id: 'e1', text: "Tiende a estar callado.", trait: "extraversion", reversed: true },
-        { id: 'a1', text: "Es compasivo, tiene un corazón sensible.", trait: "agreeableness", reversed: false },
-        { id: 'c1', text: "Tiende a ser desorganizado.", trait: "conscientiousness", reversed: true },
-        { id: 'n1', text: "Se preocupa mucho.", trait: "neuroticism", reversed: false },
-        { id: 'o1', text: "Está fascinado por el arte, la música o la literatura.", trait: "openness", reversed: false },
+        { id: '6', text: "Fascinado/a por el arte, la música o la literatura.", trait: "openness", reversed: false },
+        { id: '7', text: "Dominante, que actúa como líder.", trait: "extraversion", reversed: false },
+        { id: '8', text: "Emocionalmente estable, que no se altera con facilidad.", trait: "neuroticism", reversed: true },
+        { id: '9', text: "Que mantiene todo limpio y ordenado.", trait: "conscientiousness", reversed: false },
+        { id: '10', text: "Lleno/a de energía.", trait: "extraversion", reversed: false },
 
-        { id: 'a2', text: "A veces es grosero con los demás.", trait: "agreeableness", reversed: true },
-        { id: 'o2', text: "Tiene poco interés en ideas abstractas.", trait: "openness", reversed: true },
-        { id: 'e2', text: "Es dominante, actúa como líder.", trait: "extraversion", reversed: false },
-        { id: 'n2', text: "Tiende a sentirse deprimido, melancólico.", trait: "neuroticism", reversed: false },
-        { id: 'c2', text: "Tiene dificultad para comenzar tareas.", trait: "conscientiousness", reversed: true },
-
-        { id: 'o3', text: "Es original, se le ocurren nuevas ideas.", trait: "openness", reversed: false },
-        { id: 'e3', text: "Está lleno de energía.", trait: "extraversion", reversed: false },
-        { id: 'c3', text: "Es confiable, siempre se puede contar con usted.", trait: "conscientiousness", reversed: false },
-        { id: 'a3', text: "Asume lo mejor sobre las personas.", trait: "agreeableness", reversed: false },
-        { id: 'n3', text: "Es emocionalmente estable, no se altera fácilmente.", trait: "neuroticism", reversed: true },
+        { id: '11', text: "Tenaz, que trabaja hasta terminar la tarea.", trait: "conscientiousness", reversed: false },
+        { id: '12', text: "Que tiende a sentirse deprimido/a, melancólico/a.", trait: "neuroticism", reversed: false },
+        { id: '13', text: "Con poco interés por ideas abstractas.", trait: "openness", reversed: true },
+        { id: '14', text: "Que piensa bien de la gente", trait: "agreeableness", reversed: false },
+        { id: '15', text: "Original, que aporta ideas nuevas.", trait: "openness", reversed: false },
         
-        { id: 'c4', text: "Mantiene las cosas limpias y ordenadas.", trait: "conscientiousness", reversed: false },
-        { id: 'n4', text: "Es relajado, maneja bien el estrés.", trait: "neuroticism", reversed: true },
-        { id: 'e4', text: "Es extrovertido, sociable.", trait: "extraversion", reversed: false },
-        { id: 'a4', text: "Puede ser frío e indiferente.", trait: "agreeableness", reversed: true },
-        { id: 'o4', text: "Tiene pocos intereses artísticos.", trait: "openness", reversed: true },
+        { id: '16', text: "Abierto/a, sociable.", trait: "extraversion", reversed: false },
+        { id: '17', text: "Que tiende a ser desorganizado/a.", trait: "conscientiousness", reversed: true },
+        { id: '18', text: "Con pocos intereses artísticos.", trait: "openness", reversed: true },
+        { id: '19', text: "Que se mantiene optimista después de sufrir un contratiempo.", trait: "neuroticism", reversed: true },
+        { id: '20', text: "Que siente curiosidad por gran variedad de cosas.", trait: "openness", reversed: false },
 
-        { id: 'e5', text: "Prefiere que otros tomen el mando.", trait: "extraversion", reversed: true },
-        { id: 'a5', text: "Es respetuoso, trata a los demás con respeto.", trait: "agreeableness", reversed: false },
-        { id: 'c5', text: "Es persistente, trabaja hasta terminar la tarea.", trait: "conscientiousness", reversed: false },
-        { id: 'o5', text: "Es complejo, un pensador profundo.", trait: "openness", reversed: false },
-        { id: 'n5', text: "Se siente seguro, cómodo consigo mismo.", trait: "neuroticism", reversed: true },
+        { id: '21', text: "Variable, con notables cambios de humor.", trait: "neuroticism", reversed: false },
+        { id: '22', text: "Que siente poca compasión hacia los demás.", trait: "agreeableness", reversed: true },
+        { id: '23', text: "A quien le cuesta empezar las tareas.", trait: "conscientiousness", reversed: true },
+        { id: '24', text: "Menos activo/a que otras personas.", trait: "extraversion", reversed: true },
+        { id: '25', text: "Que puede ser algo descuidado/a.", trait: "conscientiousness", reversed: true },
 
-        { id: 'e6', text: "Es menos activo que otras personas.", trait: "extraversion", reversed: true },
-        { id: 'a6', text: "Tiende a encontrar fallos en los demás.", trait: "agreeableness", reversed: true },          
-        { id: 'c6', text: "Puede ser algo descuidado.", trait: "conscientiousness", reversed: true },
-        { id: 'n6', text: "Es temperamental, se emociona fácilmente.", trait: "neuroticism", reversed: false },
-        { id: 'o6', text: "Tiene poca creatividad.", trait: "openness", reversed: true }
+        { id: '26', text: "Con poca creatividad.", trait: "openness", reversed: true },
+        { id: '27', text: "Que se preocupa mucho.", trait: "neuroticism", reversed: false },          
+        { id: '28', text: "A quien le es difícil influir en los demás.", trait: "extraversion", reversed: true },
+        { id: '29', text: "Que a veces es grosero/a con los demás.", trait: "agreeableness", reversed: true },
+        { id: '30', text: "Que desconfía de las intenciones de los demás.", trait: "agreeableness", reversed: true }
     ];
     
     // Manejar registro de usuario
@@ -69,15 +62,18 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         const email = document.getElementById('email').value;
-        const username = document.getElementById('username').value;
+        // Eliminar los espacios en blanco al principio y ifnal del username (si tiene)
+        const username = document.getElementById('username').value.trim();
         const gender = document.getElementById('gender').value;
         const age = document.getElementById('age').value;
         
         // Validar el nombre de usuario localmente antes de enviar
-        if (!username.match(/^[a-zA-Z0-9_]{3,30}$/)) {
-            showMessage(registrationForm, 'El nombre de usuario debe tener entre 3 y 30 caracteres alfanuméricos o guiones bajos', 'error');
+        if (!username.match(/^[a-zA-Z0-9_ ]{3,30}$/)) {
+            showMessage(registrationForm, 
+                'El nombre de usuario debe tener entre 3 y 30 caracteres alfanuméricos, guiones bajos o espacios. Sin acentos', 
+                'error');
             return;
-        }
+        }        
         
         // Enviar datos de registro al backend
         fetch('https://extractingpersonality.onrender.com/api/users', {
@@ -155,7 +151,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 200);
         });
     });
-    
     
     
     // Mostrar pregunta actual
