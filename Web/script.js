@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedRating = null;
     let userRatings = {};
     let ratedMoviesCount = 0;
-    const minRatingsRequired = 10;
+    const minRatingsRequired = 25;
     const baseUrl = "https://image.tmdb.org/t/p/original/";
 
     // Ir a la sección de películas
